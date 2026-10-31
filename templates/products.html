@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Products{% endblock %}
+{% block heading %}Products{% endblock %}
+{% block content %}
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+    <div>
+      <h3 style="margin:0">Products</h3>
+      <p class="muted" style="margin:4px 0 0">What Brightloop sells. Variants (like Brand) change the price.</p>
+    </div>
+    {% if user.role == 'admin' %}
+      <a class="btn" style="margin:0" href="{{ url_for('catalog.product_new') }}">+ Add product</a>
+    {% endif %}
+  </div>
+
+  {% if rows %}
+  <div style="overflow-x:auto;margin-top:16px">
+  <table>
+    <thead><tr><th>Name</th><th>Type</th><th>Sales price</th><th>Cost price</th><th>Variants</th>{% if user.role == 'admin' %}<th style="width:170px">Actions</th>{% endif %}</tr></thead>
+    <tbody>
+    {% for p in rows %}
+      <tr>
+        <td><b>{{ p.name }}</b></td>
+        <td>{{ p.type }}</td>
+        <td>₹{{ '%.2f'|format(p.sales_price) }}</td>
+        <td>₹{{ '%.2f'|format(p.cost_price or 0) }}</td>
+        <td>{{ p.variants|length }}</td>
+        {% if user.role == 'admin' %}
+        <td>
+          <a href="{{ url_for('catalog.product_edit', product_id=p.id) }}">Edit</a>
+          <form method="post" action="{{ url_for('catalog.product_delete', product_id=p.id) }}" style="display:inline"
+                onsubmit="return confirm('Delete this product?')">
+            <button type="submit" style="margin:0 0 0 12px;padding:0;background:none;color:var(--err);font-weight:600">Delete</button>
+          </form>
+        </td>
+        {% endif %}
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <div class="empty"><span class="big">📦</span>No products yet.{% if user.role == 'admin' %} Click "Add product" to create one.{% endif %}</div>
+  {% endif %}
+</div>
+{% endblock %}
