@@ -5,7 +5,26 @@
 <div class="card">
   <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
     <h3 style="margin:0">{{ s.number }} <span class="pill {{ s.status|lower }}">{{ s.status }}</span></h3>
-    <a class="btn secondary" style="margin-top:0" href="{{ url_for('subs.subscriptions') }}">← All subscriptions</a>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      {% if next_step %}
+      <form method="post" action="{{ url_for('subs.subscription_status', sub_id=s.id) }}">
+        <input type="hidden" name="to" value="{{ next_step[0] }}">
+        <button style="margin-top:0">{{ next_step[1] }}</button>
+      </form>
+      {% endif %}
+      {% if can_close %}
+      <form method="post" action="{{ url_for('subs.subscription_status', sub_id=s.id) }}" onsubmit="return confirm('Close this subscription?')">
+        <input type="hidden" name="to" value="Closed">
+        <button class="btn secondary" style="margin-top:0">Close</button>
+      </form>
+      {% endif %}
+      <a class="btn secondary" style="margin-top:0" href="{{ url_for('subs.subscriptions') }}">← All subscriptions</a>
+    </div>
+  </div>
+  <div style="margin-top:12px;display:flex;align-items:center;gap:6px;flex-wrap:wrap" class="muted">
+    {% for name in ['Draft', 'Quotation', 'Confirmed', 'Active', 'Closed'] %}
+      <span class="pill {{ name|lower if name == s.status else '' }}" style="{% if name != s.status %}opacity:.5{% endif %}">{{ name }}</span>{% if not loop.last %} › {% endif %}
+    {% endfor %}
   </div>
   <div class="grid" style="margin-top:16px;margin-bottom:0">
     <div><div class="muted">Customer</div><b>{{ s.customer.name }}</b><div class="muted">{{ s.customer.email }}</div></div>
@@ -13,6 +32,7 @@
     <div><div class="muted">Start date</div><b>{{ s.start_date.strftime('%d %b %Y') if s.start_date else '—' }}</b></div>
     <div><div class="muted">Expiry date</div><b>{{ s.expiry_date.strftime('%d %b %Y') if s.expiry_date else '—' }}</b></div>
     <div><div class="muted">Payment terms</div><b>{{ s.payment_terms }}</b></div>
+    {% if s.status == 'Active' %}<div><div class="muted">Next invoice</div><b>{{ s.next_invoice_date.strftime('%d %b %Y') if s.next_invoice_date else 'Nothing left to bill' }}</b></div>{% endif %}
   </div>
 </div>
 

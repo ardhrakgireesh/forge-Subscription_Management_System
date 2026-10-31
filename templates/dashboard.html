@@ -2,24 +2,87 @@
 {% block title %}Dashboard{% endblock %}
 {% block heading %}Dashboard{% endblock %}
 {% block content %}
-<p class="muted" style="margin-top:0">Welcome, {{ user.name }}. Here is how the business is doing.</p>
+<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+  <p class="muted" style="margin:0">Welcome, {{ user.name }}. Here is how the business is doing.</p>
+  <form method="get" style="display:flex;gap:8px;align-items:center">
+    <span class="muted">Revenue collected:</span>
+    <select name="range" onchange="this.form.submit()" style="width:auto">
+      {% for key, label in ranges %}<option value="{{ key }}" {% if key == range_key %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+  </form>
+</div>
 
-<!-- TODO (Ardhra): replace these zeros with real numbers from the database -->
 <div class="grid">
-  <div class="card stat-card"><div class="stat-icon">🔁</div><div><div class="muted">Monthly recurring revenue</div><div class="stat">₹0</div></div></div>
-  <div class="card stat-card"><div class="stat-icon green">✅</div><div><div class="muted">Active subscriptions</div><div class="stat">0</div></div></div>
-  <div class="card stat-card"><div class="stat-icon amber">⏳</div><div><div class="muted">Outstanding</div><div class="stat">₹0</div></div></div>
-  <div class="card stat-card"><div class="stat-icon red">⚠️</div><div><div class="muted">Overdue invoices</div><div class="stat">0</div></div></div>
+  <div class="card stat-card"><div class="stat-icon">🔁</div><div><div class="muted">Monthly recurring revenue</div><div class="stat">₹{{ '{:,.0f}'.format(mrr) }}</div></div></div>
+  <a href="{{ url_for('subs.subscriptions', status='Active') }}" style="text-decoration:none;color:inherit"><div class="card stat-card"><div class="stat-icon green">✅</div><div><div class="muted">Active subscriptions</div><div class="stat">{{ active }}</div></div></div></a>
+  <div class="card stat-card"><div class="stat-icon green">💰</div><div><div class="muted">Revenue collected</div><div class="stat">₹{{ '{:,.0f}'.format(collected) }}</div></div></div>
+  <a href="{{ url_for('invoices.invoices', status='Confirmed') }}" style="text-decoration:none;color:inherit"><div class="card stat-card"><div class="stat-icon amber">⏳</div><div><div class="muted">Outstanding</div><div class="stat">₹{{ '{:,.0f}'.format(outstanding) }}</div></div></div></a>
+  <a href="{{ url_for('invoices.invoices', status='Overdue') }}" style="text-decoration:none;color:inherit"><div class="card stat-card"><div class="stat-icon red">⚠️</div><div><div class="muted">Overdue invoices</div><div class="stat">{{ overdue_count }}</div><div class="muted">₹{{ '{:,.0f}'.format(overdue_amount) }} late</div></div></div></a>
+  <div class="card stat-card" style="border:1px solid #fecaca"><div class="stat-icon red">🚨</div><div><div class="muted">Revenue at risk</div><div class="stat">₹{{ '{:,.0f}'.format(at_risk) }}</div><div class="muted">overdue + expiring in 7 days</div></div></div>
 </div>
 
 <div class="grid-2">
   <div class="card">
-    <h3>Revenue by month</h3>
-    <div class="empty"><span class="big">📈</span>The revenue chart will appear here once invoices are paid.</div>
+    <h3>Revenue collected, last 6 months</h3>
+    <div style="display:flex;gap:12px;align-items:flex-end">
+      {% for b in bars %}
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;min-width:0">
+        <div class="muted" style="font-size:12px;margin-bottom:4px">{% if b.value %}₹{{ '{:,.0f}'.format(b.value) }}{% else %}&nbsp;{% endif %}</div>
+        <div style="height:150px;width:100%;display:flex;align-items:flex-end;justify-content:center;border-bottom:1px solid #e5e7eb">
+          <div title="₹{{ '{:,.2f}'.format(b.value) }}" style="width:100%;max-width:56px;height:{{ b.pct }}%;background:var(--brand);border-radius:6px 6px 0 0"></div>
+        </div>
+        <div class="muted" style="font-size:12px;margin-top:6px">{{ b.label }}</div>
+      </div>
+      {% endfor %}
+    </div>
   </div>
+
   <div class="card">
     <h3>Needs attention</h3>
-    <div class="empty"><span class="big">🎉</span>No overdue invoices.</div>
+    {% if not overdue_rows and not expiring_rows %}
+      <div class="empty"><span class="big">🎉</span>No overdue invoices and nothing expiring soon.</div>
+    {% endif %}
+    {% if overdue_rows %}
+      <div class="muted" style="margin-bottom:6px"><b>Overdue invoices</b> ({{ overdue_count }})</div>
+      <table>
+        {% for r in overdue_rows %}
+        <tr>
+          <td><a href="{{ url_for('invoices.invoice_view', inv_id=r.inv.id) }}"><b>{{ r.inv.number }}</b></a><div class="muted">{{ r.customer }}</div></td>
+          <td style="text-align:right">₹{{ '{:,.0f}'.format(r.balance) }}<div><span class="pill overdue">{{ r.days_late }} day{{ '' if r.days_late == 1 else 's' }} late</span></div></td>
+        </tr>
+        {% endfor %}
+      </table>
+    {% endif %}
+    {% if expiring_rows %}
+      <div class="muted" style="margin:14px 0 6px"><b>Expiring within 7 days</b></div>
+      <table>
+        {% for r in expiring_rows %}
+        <tr>
+          <td><a href="{{ url_for('subs.subscription_view', sub_id=r.sub.id) }}"><b>{{ r.sub.number }}</b></a><div class="muted">{{ r.sub.customer.name }} · {{ r.sub.plan.name }}</div></td>
+          <td style="text-align:right">₹{{ '{:,.0f}'.format(r.value) }}<div><span class="pill quotation">{{ 'today' if r.days_left == 0 else 'in ' ~ r.days_left ~ ' day' ~ ('' if r.days_left == 1 else 's') }}</span></div></td>
+        </tr>
+        {% endfor %}
+      </table>
+    {% endif %}
+  </div>
+</div>
+
+<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">
+  <div class="card">
+    <h3>Subscriptions by status <span class="muted" style="font-size:13px">({{ subs_total }})</span></h3>
+    <table>
+      {% for s in ['Draft', 'Quotation', 'Confirmed', 'Active', 'Closed'] %}
+      <tr><td><span class="pill {{ s|lower }}">{{ s }}</span></td><td style="text-align:right"><b>{{ sub_counts.get(s, 0) }}</b></td></tr>
+      {% endfor %}
+    </table>
+  </div>
+  <div class="card">
+    <h3>Invoices by status <span class="muted" style="font-size:13px">({{ invs_total }})</span></h3>
+    <table>
+      {% for s in ['Draft', 'Confirmed', 'Paid', 'Cancelled'] %}
+      <tr><td><span class="pill {{ s|lower }}">{{ s }}</span></td><td style="text-align:right"><b>{{ inv_counts.get(s, 0) }}</b></td></tr>
+      {% endfor %}
+    </table>
   </div>
 </div>
 {% endblock %}

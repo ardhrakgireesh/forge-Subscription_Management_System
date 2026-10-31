@@ -53,6 +53,24 @@ app.register_blueprint(plans_bp)
 from routes_subscriptions import subs_bp
 app.register_blueprint(subs_bp)
 
+from routes_invoices import invoices_bp   # Invoices + Run Billing
+app.register_blueprint(invoices_bp)
+
+from routes_portal import portal_bp       # Customer portal (customers see only their own data)
+app.register_blueprint(portal_bp)
+
+from routes_templates import qt_bp        # Quotation templates
+app.register_blueprint(qt_bp)
+
+# Payments is built by the teammate (routes_payments.py). The app still starts if it is not there yet.
+try:
+    from routes_payments import payments_bp
+    app.register_blueprint(payments_bp)
+except ModuleNotFoundError as e:
+    if e.name != "routes_payments":
+        raise
+    print("NOTE: routes_payments.py not found yet, so /payments is not available.")
+
 
 # ---------- auth routes ----------
 @app.route("/")
@@ -170,8 +188,10 @@ def new_staff():
 @app.route("/dashboard")
 @login_required()
 def dashboard():
-    # TODO (Ardhra): replace with real numbers: active subs, revenue, outstanding, overdue
-    return render_template("dashboard.html")
+    if current_user().role == "customer":      # customers have their own portal
+        return redirect(url_for("portal.my_subscriptions"))
+    from reports import dashboard_data
+    return render_template("dashboard.html", **dashboard_data(request.args.get("range", "month")))
 
 
 # ---------- setup ----------

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Invoices{% endblock %}
+{% block heading %}Invoices{% endblock %}
+{% block content %}
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+    <form method="get" style="display:flex;gap:8px;align-items:center">
+      <select name="status" onchange="this.form.submit()" style="width:auto">
+        <option value="">All invoices</option>
+        {% for s in statuses %}<option value="{{ s }}" {% if s == status %}selected{% endif %}>{{ s }}</option>{% endfor %}
+      </select>
+    </form>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <form method="post" action="{{ url_for('invoices.invoices_confirm_all') }}" onsubmit="return confirm('Confirm all draft invoices?')">
+        <button class="btn secondary" style="margin-top:0">Confirm all drafts</button>
+      </form>
+      <form method="post" action="{{ url_for('invoices.invoices_run') }}">
+        <button style="margin-top:0">▶ Run Billing</button>
+      </form>
+    </div>
+  </div>
+
+  {% if rows %}
+  <div style="overflow-x:auto;margin-top:12px">
+    <table>
+      <tr><th>Number</th><th>Customer</th><th>Subscription</th><th>Period start</th><th>Due</th><th>Total</th><th>Status</th></tr>
+      {% for i in rows %}
+      <tr>
+        <td><a href="{{ url_for('invoices.invoice_view', inv_id=i.id) }}"><b>{{ i.number }}</b></a></td>
+        <td>{{ i.customer.name }}</td>
+        <td>{{ i.subscription.number }}</td>
+        <td>{{ i.period_start.strftime('%d %b %Y') }}</td>
+        <td>{{ i.due_date.strftime('%d %b %Y') if i.due_date else '—' }}</td>
+        <td>₹{{ '%.2f'|format(i.total) }}</td>
+        <td><span class="pill {{ i.status|lower }}">{{ i.status }}</span>{% if i.id in overdue %} <span class="pill overdue">Overdue</span>{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+  {% else %}
+  <div class="empty"><span class="big">📄</span>No invoices{% if status %} with status {{ status }}{% endif %} yet. Click <b>Run Billing</b> to create them from active subscriptions.</div>
+  {% endif %}
+</div>
+{% endblock %}

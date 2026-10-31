@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}My subscriptions{% endblock %}
+{% block heading %}My subscriptions{% endblock %}
+{% block content %}
+<div class="card">
+  {% if rows %}
+  <div style="overflow-x:auto">
+    <table>
+      <tr><th>Number</th><th>Plan</th><th>Start</th><th>Expiry</th><th>Next invoice</th><th>Status</th></tr>
+      {% for s in rows %}
+      <tr>
+        <td><a href="{{ url_for('portal.my_subscription_view', sub_id=s.id) }}"><b>{{ s.number }}</b></a></td>
+        <td>{{ s.plan.name }}<div class="muted">₹{{ '%.2f'|format(s.plan.price) }} / {{ s.plan.billing_period }}</div></td>
+        <td>{{ s.start_date.strftime('%d %b %Y') if s.start_date else '—' }}</td>
+        <td>{{ s.expiry_date.strftime('%d %b %Y') if s.expiry_date else '—' }}</td>
+        <td>{{ s.next_invoice_date.strftime('%d %b %Y') if s.next_invoice_date else '—' }}</td>
+        <td><span class="pill {{ s.status|lower }}">{{ s.status }}</span></td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+  {% else %}
+  <div class="empty"><span class="big">📝</span>You have no subscriptions yet.</div>
+  {% endif %}
+</div>
+{% endblock %}

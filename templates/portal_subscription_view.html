@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}{{ s.number }}{% endblock %}
+{% block heading %}{{ s.number }}{% endblock %}
+{% block content %}
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+    <h3 style="margin:0">{{ s.number }} <span class="pill {{ s.status|lower }}">{{ s.status }}</span></h3>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      {% if can_close %}
+      <form method="post" action="{{ url_for('portal.my_subscription_close', sub_id=s.id) }}" onsubmit="return confirm('Close this subscription? You will not be billed again.')">
+        <button class="btn secondary" style="margin-top:0">Close subscription</button>
+      </form>
+      {% endif %}
+      <a class="btn secondary" style="margin-top:0" href="{{ url_for('portal.my_subscriptions') }}">← My subscriptions</a>
+    </div>
+  </div>
+  <div class="grid" style="margin-top:16px;margin-bottom:0">
+    <div><div class="muted">Plan</div><b>{{ s.plan.name }}</b><div class="muted">₹{{ '%.2f'|format(s.plan.price) }} / {{ s.plan.billing_period }}</div></div>
+    <div><div class="muted">Start date</div><b>{{ s.start_date.strftime('%d %b %Y') if s.start_date else '—' }}</b></div>
+    <div><div class="muted">Expiry date</div><b>{{ s.expiry_date.strftime('%d %b %Y') if s.expiry_date else '—' }}</b></div>
+    <div><div class="muted">Payment terms</div><b>{{ s.payment_terms }}</b></div>
+    {% if s.status == 'Active' %}<div><div class="muted">Next invoice</div><b>{{ s.next_invoice_date.strftime('%d %b %Y') if s.next_invoice_date else 'Nothing left to bill' }}</b></div>{% endif %}
+  </div>
+</div>
+<div class="card">
+  <h3>What you are subscribed to</h3>
+  <div style="overflow-x:auto">
+    <table>
+      <tr><th>Product</th><th>Qty</th><th>Unit price</th><th>Tax</th><th>Amount</th></tr>
+      {% for l in s.lines %}
+      {% set net, tax = line_totals(l) %}
+      <tr>
+        <td><b>{{ l.product.name }}</b>{% if l.variant_id and variants.get(l.variant_id) %}<div class="muted">{{ variants[l.variant_id].attribute }}: {{ variants[l.variant_id].value }}</div>{% endif %}</td>
+        <td>{{ l.quantity }}</td>
+        <td>₹{{ '%.2f'|format(l.unit_price) }}</td>
+        <td>{% if l.tax %}{{ l.tax.name }} (₹{{ '%.2f'|format(tax) }}){% else %}<span class="muted">No tax</span>{% endif %}</td>
+        <td>₹{{ '%.2f'|format(net) }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+  <div style="display:flex;justify-content:flex-end;margin-top:14px">
+    <table style="width:auto;min-width:240px">
+      <tr><td class="muted">Subtotal</td><td style="text-align:right">₹{{ '%.2f'|format(totals.net) }}</td></tr>
+      <tr><td class="muted">Tax</td><td style="text-align:right">₹{{ '%.2f'|format(totals.tax) }}</td></tr>
+      <tr><td><b>Total per period</b></td><td style="text-align:right"><b>₹{{ '%.2f'|format(totals.total) }}</b></td></tr>
+    </table>
+  </div>
+</div>
+{% endblock %}

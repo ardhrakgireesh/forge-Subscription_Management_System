@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}{{ t.name }}{% endblock %}
+{% block heading %}{{ t.name }}{% endblock %}
+{% block content %}
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+    <h3 style="margin:0">{{ t.name }}</h3>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      {% if user.role == 'admin' %}
+      <form method="post" action="{{ url_for('qt.template_delete', t_id=t.id) }}" onsubmit="return confirm('Delete this template?')"><button class="btn secondary" style="margin-top:0">Delete</button></form>
+      {% endif %}
+      <a class="btn secondary" style="margin-top:0" href="{{ url_for('qt.templates') }}">← All templates</a>
+    </div>
+  </div>
+  <div class="grid" style="margin-top:14px;margin-bottom:0">
+    <div><div class="muted">Plan</div><b>{{ t.plan.name if t.plan else '—' }}</b>{% if t.plan %}<div class="muted">₹{{ '%.2f'|format(t.plan.price) }} / {{ t.plan.billing_period }}</div>{% endif %}</div>
+    <div><div class="muted">Quote valid for</div><b>{{ t.validity_days }} days</b></div>
+  </div>
+</div>
+
+<div class="card">
+  <h3>Product lines</h3>
+  {% if t.lines %}
+  <div style="overflow-x:auto"><table>
+    <tr><th>Product</th><th>Qty</th><th>Price</th>{% if user.role == 'admin' %}<th></th>{% endif %}</tr>
+    {% for l in t.lines %}
+    <tr>
+      <td><b>{{ l.product.name }}</b></td><td>{{ l.quantity }}</td><td>₹{{ '%.2f'|format(l.product.sales_price) }}</td>
+      {% if user.role == 'admin' %}<td><form method="post" action="{{ url_for('qt.template_line_delete', t_id=t.id, line_id=l.id) }}"><button class="btn secondary" style="margin:0;padding:4px 10px;font-size:13px">Remove</button></form></td>{% endif %}
+    </tr>
+    {% endfor %}
+  </table></div>
+  {% else %}
+  <div class="empty"><span class="big">🧾</span>No lines yet.</div>
+  {% endif %}
+  {% if user.role == 'admin' %}
+  <form method="post" action="{{ url_for('qt.template_line_add', t_id=t.id) }}" style="margin-top:14px">
+    <div class="grid" style="margin-bottom:0">
+      <div><label>Product</label>
+        <select name="product_id" required><option value="">Choose…</option>{% for p in products %}<option value="{{ p.id }}">{{ p.name }}</option>{% endfor %}</select></div>
+      <div><label>Quantity</label><input type="number" name="quantity" min="1" value="1" required></div>
+    </div>
+    <button type="submit">Add line</button>
+  </form>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h3>Create a subscription from this template</h3>
+  {% if not t.lines %}
+    <p class="muted">Add at least one product line first.</p>
+  {% else %}
+  <form method="post" action="{{ url_for('qt.template_use', t_id=t.id) }}">
+    <div class="grid" style="margin-bottom:0">
+      <div><label>Customer</label>
+        <select name="customer_id" required><option value="">Choose a customer…</option>{% for c in customers %}<option value="{{ c.id }}" {% if f.get('customer_id')|string == c.id|string %}selected{% endif %}>{{ c.name }}</option>{% endfor %}</select></div>
+      <div><label>Start date</label><input type="date" name="start_date" value="{{ f.get('start_date', '') }}" required></div>
+      <div><label>Expiry date</label><input type="date" name="expiry_date" value="{{ f.get('expiry_date', '') }}" required></div>
+      <div><label>Payment terms</label>
+        <select name="payment_terms">{% for x in terms %}<option {% if f.get('payment_terms') == x %}selected{% endif %}>{{ x }}</option>{% endfor %}</select></div>
+      <div><label>Tax on all lines</label>
+        <select name="tax_id"><option value="">No tax</option>{% for x in taxes %}<option value="{{ x.id }}" {% if f.get('tax_id')|string == x.id|string %}selected{% endif %}>{{ x.name }}</option>{% endfor %}</select></div>
+    </div>
+    <button type="submit">Create quotation</button>
+  </form>
+  {% endif %}
+</div>
+{% endblock %}

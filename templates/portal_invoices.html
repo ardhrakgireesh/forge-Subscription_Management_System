@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}My invoices{% endblock %}
+{% block heading %}My invoices{% endblock %}
+{% block content %}
+{% if owed > 0 %}
+<div class="card stat-card"><div class="stat-icon amber">⏳</div><div><div class="muted">You currently owe</div><div class="stat">₹{{ '{:,.2f}'.format(owed) }}</div></div></div>
+{% endif %}
+<div class="card">
+  {% if rows %}
+  <div style="overflow-x:auto">
+    <table>
+      <tr><th>Number</th><th>Subscription</th><th>Period start</th><th>Due</th><th>Total</th><th>Status</th></tr>
+      {% for i in rows %}
+      <tr>
+        <td><a href="{{ url_for('portal.my_invoice_view', inv_id=i.id) }}"><b>{{ i.number }}</b></a></td>
+        <td>{{ i.subscription.number }}</td>
+        <td>{{ i.period_start.strftime('%d %b %Y') }}</td>
+        <td>{{ i.due_date.strftime('%d %b %Y') if i.due_date else '—' }}</td>
+        <td>₹{{ '%.2f'|format(i.total) }}</td>
+        <td><span class="pill {{ i.status|lower }}">{{ i.status }}</span>{% if i.id in overdue %} <span class="pill overdue">Overdue</span>{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+  {% else %}
+  <div class="empty"><span class="big">📄</span>You have no invoices yet.</div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -5,7 +5,7 @@ Step 2: order lines (product, quantity, unit price, tax) and the totals.
 Admin and staff can create. Customers will get their own portal later.
 """
 import math
-from datetime import datetime
+from datetime import datetime, date
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash, abort
 from sqlalchemy.orm import joinedload, selectinload
@@ -20,6 +20,14 @@ STATUSES = ["Draft", "Quotation", "Confirmed", "Active", "Closed"]
 # Lines can only be changed before the subscription is confirmed,
 # otherwise the money on future invoices would change behind our back.
 LINE_EDITABLE = ["Draft", "Quotation"]
+
+# Status flow: Draft -> Quotation -> Confirmed -> Active -> Closed
+# (a subscription can also be closed early, from any status before Closed)
+NEXT_STEP = {
+    "Draft": ("Quotation", "Send quotation"),
+    "Quotation": ("Confirmed", "Confirm"),
+    "Confirmed": ("Active", "Activate"),
+}
 
 
 def _parse_date(text):
@@ -147,7 +155,9 @@ def _view_page(sub):
     taxes = Tax.query.order_by(Tax.name).all()
     return render_template("subscription_view.html", s=sub, products=products, variants=variants,
                            taxes=taxes, totals=subscription_totals(sub),
-                           line_totals=line_totals, editable=sub.status in LINE_EDITABLE)
+                           line_totals=line_totals, editable=sub.status in LINE_EDITABLE,
+                           next_step=NEXT_STEP.get(sub.status),
+                           can_close=sub.status != "Closed")
 
 
 @subs_bp.route("/subscriptions/<int:sub_id>")
@@ -251,3 +261,39 @@ def line_delete(sub_id, line_id):
         db.session.commit()
         flash("Line removed.", "ok")
     return redirect(url_for("subs.subscription_view", sub_id=sub.id))
+
+
+@subs_bp.route("/subscriptions/<int:sub_id>/status", methods=["POST"])
+@login_required(["admin", "staff"])
+def subscription_status(sub_id):
+    """Moves a subscription to its next status (or closes it)."""
+    sub = db.session.get(Subscription, sub_id) or abort(404)
+    to = request.form.get("to", "")
+    back = redirect(url_for("subs.subscription_view", sub_id=sub.id))
+
+    step = NEXT_STEP.get(sub.status)
+    if to == "Closed" and sub.status != "Closed":
+        # A plan can forbid closing early (the admin decides plan by plan).
+        if sub.status == "Active" and not sub.plan.closable and (not sub.expiry_date or sub.expiry_date >= date.today()):
+            flash("This plan cannot be closed early.", "error")
+            return back
+        sub.status, sub.next_invoice_date = "Closed", None
+        db.session.commit()
+        flash(f"{sub.number} is now Closed.", "ok")
+        return back
+
+    if not step or to != step[0]:
+        flash("That status change is not allowed.", "error")
+        return back
+    if not sub.lines:
+        flash("Add at least one order line first.", "error")
+        return back
+    if to == "Active":
+        if sub.expiry_date and sub.expiry_date < date.today():
+            flash("The expiry date has already passed, so this subscription cannot be activated.", "error")
+            return back
+        sub.next_invoice_date = sub.start_date      # the first invoice is due on the start date
+    sub.status = to
+    db.session.commit()
+    flash(f"{sub.number} is now {to}.", "ok")
+    return back

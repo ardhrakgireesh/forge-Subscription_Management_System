@@ -29,13 +29,14 @@
       <a class="item {% if request.path.startswith('/discounts') %}active{% endif %}" href="/discounts">🏷️ Discounts</a>
 
       <div class="menu-title">Sales</div>
+      <a class="item {% if request.path.startswith('/quotation-templates') %}active{% endif %}" href="/quotation-templates">📋 Quote templates</a>
       <a class="item {% if request.path.startswith('/subscriptions') %}active{% endif %}" href="/subscriptions">📝 Subscriptions</a>
       <a class="item {% if request.path.startswith('/invoices') %}active{% endif %}" href="/invoices">📄 Invoices</a>
       <a class="item {% if request.path.startswith('/payments') %}active{% endif %}" href="/payments">💳 Payments</a>
     {% else %}
       <div class="menu-title">My account</div>
-      <span class="item">📝 My subscriptions <span class="soon">soon</span></span>
-      <span class="item">📄 My invoices <span class="soon">soon</span></span>
+      <a class="item {% if request.path.startswith('/portal/subscriptions') %}active{% endif %}" href="{{ url_for('portal.my_subscriptions') }}">📝 My subscriptions</a>
+      <a class="item {% if request.path.startswith('/portal/invoices') %}active{% endif %}" href="{{ url_for('portal.my_invoices') }}">📄 My invoices</a>
     {% endif %}
 
     {% if user.role == 'admin' %}

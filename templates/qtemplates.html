@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Quotation templates{% endblock %}
+{% block heading %}Quotation templates{% endblock %}
+{% block content %}
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+    <p class="muted" style="margin:0">Start a quote from a ready-made plan and product lines.</p>
+    {% if user.role == 'admin' %}<a class="btn" style="margin-top:0" href="{{ url_for('qt.template_new') }}">+ New template</a>{% endif %}
+  </div>
+  {% if rows %}
+  <div style="overflow-x:auto;margin-top:12px">
+    <table>
+      <tr><th>Name</th><th>Plan</th><th>Lines</th><th>Valid for</th><th></th></tr>
+      {% for t in rows %}
+      <tr>
+        <td><a href="{{ url_for('qt.template_view', t_id=t.id) }}"><b>{{ t.name }}</b></a></td>
+        <td>{{ t.plan.name if t.plan else '—' }}</td>
+        <td>{{ t.lines|length }}</td>
+        <td>{{ t.validity_days }} days</td>
+        <td><a class="btn secondary" style="margin:0;padding:4px 10px;font-size:13px" href="{{ url_for('qt.template_view', t_id=t.id) }}">Open</a></td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+  {% else %}
+  <div class="empty"><span class="big">📋</span>No templates yet.{% if user.role == 'admin' %} Click <b>New template</b> to make the first one.{% endif %}</div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}{{ inv.number }}{% endblock %}
+{% block heading %}{{ inv.number }}{% endblock %}
+{% block content %}
+<style>
+  @media print {
+    .sidebar, .topbar, .no-print, .flash { display: none !important; }
+    .content { margin-left: 0 !important; }
+    main { padding: 0 !important; }
+    .card { box-shadow: none !important; }
+  }
+</style>
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+    <h3 style="margin:0">Invoice {{ inv.number }}
+      <span class="pill {{ inv.status|lower }}">{{ inv.status }}</span>
+      {% if overdue %}<span class="pill overdue">Overdue</span>{% endif %}
+    </h3>
+    <div class="no-print" style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn secondary" style="margin-top:0" type="button" onclick="window.print()">Print</button>
+      <a class="btn secondary" style="margin-top:0" href="{{ url_for('portal.my_invoices') }}">← My invoices</a>
+    </div>
+  </div>
+  <div class="grid" style="margin-top:16px;margin-bottom:0">
+    <div><div class="muted">Billed to</div><b>{{ inv.customer.name }}</b><div class="muted">{{ inv.customer.email }}</div></div>
+    <div><div class="muted">Subscription</div><b>{{ inv.subscription.number }}</b><div class="muted">{{ inv.subscription.plan.name }}</div></div>
+    <div><div class="muted">Billing period starts</div><b>{{ inv.period_start.strftime('%d %b %Y') }}</b></div>
+    <div><div class="muted">Due date</div><b>{{ inv.due_date.strftime('%d %b %Y') if inv.due_date else '—' }}</b></div>
+  </div>
+</div>
+<div class="card">
+  <h3>Lines</h3>
+  <div style="overflow-x:auto">
+    <table>
+      <tr><th>Description</th><th>Qty</th><th>Unit price</th><th>Tax</th><th>Amount</th></tr>
+      {% for l in inv.lines %}
+      <tr>
+        <td>{{ l.description }}</td><td>{{ l.quantity }}</td>
+        <td>{{ '-' if l.unit_price < 0 }}₹{{ '%.2f'|format(l.unit_price|abs) }}</td>
+        <td>₹{{ '%.2f'|format(l.tax_amount) }}</td>
+        <td>{{ '-' if l.amount < 0 }}₹{{ '%.2f'|format(l.amount|abs) }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+  <div style="display:flex;justify-content:flex-end;margin-top:14px">
+    <table style="width:auto;min-width:260px">
+      <tr><td class="muted">Subtotal</td><td style="text-align:right">₹{{ '%.2f'|format(inv.subtotal) }}</td></tr>
+      {% if inv.discount_total %}<tr><td class="muted">Discount</td><td style="text-align:right">-₹{{ '%.2f'|format(inv.discount_total) }}</td></tr>{% endif %}
+      <tr><td class="muted">Tax</td><td style="text-align:right">₹{{ '%.2f'|format(inv.tax_total) }}</td></tr>
+      <tr><td><b>Total</b></td><td style="text-align:right"><b>₹{{ '%.2f'|format(inv.total) }}</b></td></tr>
+      <tr><td class="muted">Paid</td><td style="text-align:right">₹{{ '%.2f'|format(paid) }}</td></tr>
+      <tr><td><b>Balance due</b></td><td style="text-align:right"><b>₹{{ '%.2f'|format(balance) }}</b></td></tr>
+    </table>
+  </div>
+</div>
+{% endblock %}
