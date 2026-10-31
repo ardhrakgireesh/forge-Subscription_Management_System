@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Taxes{% endblock %}
+{% block heading %}Taxes{% endblock %}
+{% block content %}
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+    <div>
+      <h3 style="margin:0">Tax rules</h3>
+      <p class="muted" style="margin:4px 0 0">Taxes are added to invoices automatically using these rates.</p>
+    </div>
+    {% if user.role == 'admin' %}
+      <a class="btn" style="margin:0" href="{{ url_for('catalog.tax_new') }}">+ Add tax</a>
+    {% endif %}
+  </div>
+
+  {% if taxes %}
+  <table style="margin-top:16px">
+    <thead><tr><th>Name</th><th>Rate</th>{% if user.role == 'admin' %}<th style="width:170px">Actions</th>{% endif %}</tr></thead>
+    <tbody>
+    {% for t in taxes %}
+      <tr>
+        <td>{{ t.name }}</td>
+        <td>{{ '%g' % t.rate }}%</td>
+        {% if user.role == 'admin' %}
+        <td>
+          <a href="{{ url_for('catalog.tax_edit', tax_id=t.id) }}">Edit</a>
+          <form method="post" action="{{ url_for('catalog.tax_delete', tax_id=t.id) }}" style="display:inline"
+                onsubmit="return confirm('Delete this tax?')">
+            <button type="submit" style="margin:0 0 0 12px;padding:0;background:none;color:var(--err);font-weight:600">Delete</button>
+          </form>
+        </td>
+        {% endif %}
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty"><span class="big">🧾</span>No taxes yet.{% if user.role == 'admin' %} Click "Add tax" to create one.{% endif %}</div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Plans{% endblock %}
+{% block heading %}Plans{% endblock %}
+{% block content %}
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+    <div>
+      <h3 style="margin:0">Subscription plans</h3>
+      <p class="muted" style="margin:4px 0 0">What each plan costs and how often it bills.</p>
+    </div>
+    {% if user.role == 'admin' %}
+      <a class="btn" style="margin:0" href="{{ url_for('plans.plan_new') }}">+ Add plan</a>
+    {% endif %}
+  </div>
+
+  {% if plans %}
+  <div style="overflow-x:auto">
+  <table style="margin-top:16px">
+    <thead>
+      <tr><th>Name</th><th>Price</th><th>Bills</th><th>Min qty</th><th>Available</th><th>Rules</th>
+      {% if user.role == 'admin' %}<th style="width:150px">Actions</th>{% endif %}</tr>
+    </thead>
+    <tbody>
+    {% for p in plans %}
+      <tr>
+        <td><strong>{{ p.name }}</strong></td>
+        <td>₹{{ '{:,.2f}'.format(p.price) }}</td>
+        <td style="text-transform:capitalize">{{ p.billing_period }}</td>
+        <td>{{ p.min_quantity }}</td>
+        <td class="muted">
+          {{ p.start_date.strftime('%d %b %Y') if p.start_date else 'Anytime' }}
+          →
+          {{ p.end_date.strftime('%d %b %Y') if p.end_date else 'No end' }}
+        </td>
+        <td>
+          {% if p.auto_close %}<span class="pill quotation">Auto-close</span>{% endif %}
+          {% if p.closable %}<span class="pill">Closable</span>{% endif %}
+          {% if p.pausable %}<span class="pill">Pausable</span>{% endif %}
+          {% if p.renewable %}<span class="pill">Renewable</span>{% endif %}
+        </td>
+        {% if user.role == 'admin' %}
+        <td>
+          <a href="{{ url_for('plans.plan_edit', plan_id=p.id) }}">Edit</a>
+          <form method="post" action="{{ url_for('plans.plan_delete', plan_id=p.id) }}" style="display:inline"
+                onsubmit="return confirm('Delete this plan?')">
+            <button type="submit" style="margin:0 0 0 12px;padding:0;background:none;color:var(--err);font-weight:600">Delete</button>
+          </form>
+        </td>
+        {% endif %}
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <div class="empty"><span class="big">🗂️</span>No plans yet.{% if user.role == 'admin' %} Click "Add plan" to create one.{% endif %}</div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit tax' if tax else 'Add tax' }}{% endblock %}
+{% block heading %}{{ 'Edit tax' if tax else 'Add tax' }}{% endblock %}
+{% block content %}
+<div class="card narrow">
+  <form method="post">
+    <label>Tax name</label>
+    <input name="name" value="{{ name }}" placeholder="e.g. GST 18%" maxlength="50" required>
+    <label>Rate (%)</label>
+    <input name="rate" value="{{ rate }}" type="number" step="0.01" min="0" max="100" placeholder="e.g. 18" required>
+    <button type="submit">{{ 'Save changes' if tax else 'Add tax' }}</button>
+    <a class="btn secondary" href="{{ url_for('catalog.taxes') }}">Cancel</a>
+  </form>
+</div>
+{% endblock %}

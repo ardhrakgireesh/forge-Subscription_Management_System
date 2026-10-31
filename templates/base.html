@@ -21,23 +21,17 @@
     <a class="item {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">📊 Dashboard</a>
 
     {% if user.role in ['admin', 'staff'] %}
-      {#
-        HOW TO ADD A MENU ITEM (teammate):
-        1. Build the page + route in Flask.
-        2. Replace the grey span item below with a link, using your route's function name:
-           <a class="item" href="/products">Products</a>
-           (or use url_for with your route function name)
-      #}
+      {# All menu links below are already connected. A link shows "Not Found" until its page is built. #}
       <div class="menu-title">Catalog</div>
-      <span class="item">🧾 Taxes <span class="soon">soon</span></span>
-      <span class="item">📦 Products <span class="soon">soon</span></span>
-      <span class="item">🗂️ Plans <span class="soon">soon</span></span>
-      <span class="item">🏷️ Discounts <span class="soon">soon</span></span>
+      <a class="item {% if request.endpoint and request.endpoint.startswith('catalog.tax') %}active{% endif %}" href="{{ url_for('catalog.taxes') }}">🧾 Taxes</a>
+      <a class="item {% if request.path.startswith('/products') %}active{% endif %}" href="/products">📦 Products</a>
+      <a class="item {% if request.path.startswith('/plans') %}active{% endif %}" href="/plans">🗂️ Plans</a>
+      <a class="item {% if request.path.startswith('/discounts') %}active{% endif %}" href="/discounts">🏷️ Discounts</a>
 
       <div class="menu-title">Sales</div>
-      <span class="item">📝 Subscriptions <span class="soon">soon</span></span>
-      <span class="item">📄 Invoices <span class="soon">soon</span></span>
-      <span class="item">💳 Payments <span class="soon">soon</span></span>
+      <a class="item {% if request.path.startswith('/subscriptions') %}active{% endif %}" href="/subscriptions">📝 Subscriptions</a>
+      <a class="item {% if request.path.startswith('/invoices') %}active{% endif %}" href="/invoices">📄 Invoices</a>
+      <a class="item {% if request.path.startswith('/payments') %}active{% endif %}" href="/payments">💳 Payments</a>
     {% else %}
       <div class="menu-title">My account</div>
       <span class="item">📝 My subscriptions <span class="soon">soon</span></span>

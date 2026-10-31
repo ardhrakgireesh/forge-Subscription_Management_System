@@ -11,6 +11,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from models import db, User
+from helpers import current_user, login_required
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "change-me-before-deploying"
@@ -36,30 +37,18 @@ def validate_password(pw):
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
-# ---------- login helpers ----------
-def current_user():
-    uid = session.get("user_id")
-    return db.session.get(User, uid) if uid else None
-
-
+# ---------- login helpers (live in helpers.py) ----------
 @app.context_processor
 def inject_user():
     return {"user": current_user()}
 
 
-def login_required(roles=None):
-    """Use @login_required() for any logged-in user, or @login_required(["admin"])."""
-    def decorator(f):
-        @wraps(f)
-        def wrapper(*args, **kwargs):
-            u = current_user()
-            if not u:
-                return redirect(url_for("login"))
-            if roles and u.role not in roles:
-                abort(403)
-            return f(*args, **kwargs)
-        return wrapper
-    return decorator
+# ---------- extra pages (each lives in its own file) ----------
+from routes_catalog import catalog_bp   # Taxes, Products, Plans, Discounts
+app.register_blueprint(catalog_bp)
+
+from routes_plans import plans_bp       # Plans
+app.register_blueprint(plans_bp)
 
 
 # ---------- auth routes ----------

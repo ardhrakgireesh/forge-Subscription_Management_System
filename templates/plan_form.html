@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit plan' if plan else 'Add plan' }}{% endblock %}
+{% block heading %}{{ 'Edit plan' if plan else 'Add plan' }}{% endblock %}
+{% block content %}
+<div class="card narrow">
+  <form method="post">
+    <label>Plan name</label>
+    <input name="name" value="{{ f.get('name', '') }}" placeholder="e.g. Business Monthly" maxlength="100" required>
+
+    <label>Price (₹)</label>
+    <input name="price" type="number" step="0.01" min="0" value="{{ f.get('price', '') }}" placeholder="e.g. 499" required>
+
+    <label>Billing period</label>
+    <select name="billing_period" required>
+      <option value="">Choose...</option>
+      {% for p in periods %}
+        <option value="{{ p }}" {% if f.get('billing_period') == p %}selected{% endif %}>{{ p|capitalize }}</option>
+      {% endfor %}
+    </select>
+
+    <label>Minimum quantity</label>
+    <input name="min_quantity" type="number" min="1" step="1" value="{{ f.get('min_quantity', 1) }}" required>
+
+    <label>Available from</label>
+    <input name="start_date" type="date" value="{{ f.get('start_date', '') }}">
+    <label>Available until <span class="muted">(optional)</span></label>
+    <input name="end_date" type="date" value="{{ f.get('end_date', '') }}">
+
+    <label>Plan rules</label>
+    <div style="display:grid;gap:8px;font-size:14px">
+      <label style="margin:0;font-weight:400"><input type="checkbox" name="auto_close" style="width:auto" {% if f.get('auto_close') %}checked{% endif %}> Close automatically on the end date</label>
+      <label style="margin:0;font-weight:400"><input type="checkbox" name="closable" style="width:auto" {% if f.get('closable') %}checked{% endif %}> Can be closed early</label>
+      <label style="margin:0;font-weight:400"><input type="checkbox" name="pausable" style="width:auto" {% if f.get('pausable') %}checked{% endif %}> Can be paused</label>
+      <label style="margin:0;font-weight:400"><input type="checkbox" name="renewable" style="width:auto" {% if f.get('renewable') %}checked{% endif %}> Can be renewed</label>
+    </div>
+
+    <button type="submit">{{ 'Save changes' if plan else 'Add plan' }}</button>
+    <a class="btn secondary" href="{{ url_for('plans.plans') }}">Cancel</a>
+  </form>
+</div>
+{% endblock %}
