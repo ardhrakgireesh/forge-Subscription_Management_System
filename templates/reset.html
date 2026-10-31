@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}New password{% endblock %}
+{% block auth %}
+<div class="card">
+  <h2>Choose a new password</h2>
+  <form method="post">
+    <label>New password</label><input type="password" name="password" required>
+    <p class="muted">More than 8 characters, with an uppercase letter, a lowercase letter and a special character.</p>
+    <button type="submit">Update password</button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Brightloop{% endblock %} · Brightloop</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+{% macro flashes() %}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, msg in messages %}<div class="flash {{ category }}">{{ msg }}</div>{% endfor %}
+  {% endwith %}
+{% endmacro %}
+
+{% if user %}
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <a class="brand" href="{{ url_for('home') }}"><span class="logo">🔁</span> Brightloop</a>
+
+    <a class="item {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">📊 Dashboard</a>
+
+    {% if user.role in ['admin', 'staff'] %}
+      {#
+        HOW TO ADD A MENU ITEM (teammate):
+        1. Build the page + route in Flask.
+        2. Replace the grey span item below with a link, using your route's function name:
+           <a class="item" href="/products">Products</a>
+           (or use url_for with your route function name)
+      #}
+      <div class="menu-title">Catalog</div>
+      <span class="item">🧾 Taxes <span class="soon">soon</span></span>
+      <span class="item">📦 Products <span class="soon">soon</span></span>
+      <span class="item">🗂️ Plans <span class="soon">soon</span></span>
+      <span class="item">🏷️ Discounts <span class="soon">soon</span></span>
+
+      <div class="menu-title">Sales</div>
+      <span class="item">📝 Subscriptions <span class="soon">soon</span></span>
+      <span class="item">📄 Invoices <span class="soon">soon</span></span>
+      <span class="item">💳 Payments <span class="soon">soon</span></span>
+    {% else %}
+      <div class="menu-title">My account</div>
+      <span class="item">📝 My subscriptions <span class="soon">soon</span></span>
+      <span class="item">📄 My invoices <span class="soon">soon</span></span>
+    {% endif %}
+
+    {% if user.role == 'admin' %}
+      <div class="menu-title">Admin</div>
+      <a class="item {% if request.endpoint == 'new_staff' %}active{% endif %}" href="{{ url_for('new_staff') }}">👤 Add staff</a>
+    {% endif %}
+
+    <div class="menu-title">Account</div>
+    <a class="item" href="{{ url_for('logout') }}">🚪 Logout</a>
+  </aside>
+
+  <div class="content">
+    <header class="topbar">
+      <div style="display:flex;align-items:center">
+        <button class="menu-btn" style="margin-top:0;background:none;color:inherit" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+        <h1>{% block heading %}Brightloop{% endblock %}</h1>
+      </div>
+      <div class="who">
+        <span class="badge">{{ user.role }}</span>
+        <span>{{ user.name }}</span>
+        <div class="avatar">{{ user.name[0]|upper }}</div>
+      </div>
+    </header>
+    <main>
+      {{ flashes() }}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+
+{% else %}
+<div class="auth-wrap">
+  <div class="auth-box">
+    <div class="auth-brand">🔁 Brightloop</div>
+    {{ flashes() }}
+    {% block auth %}{% endblock %}
+  </div>
+</div>
+{% endif %}
+</body>
+</html>

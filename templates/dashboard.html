@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block heading %}Dashboard{% endblock %}
+{% block content %}
+<p class="muted" style="margin-top:0">Welcome, {{ user.name }}. Here is how the business is doing.</p>
+
+<!-- TODO (Ardhra): replace these zeros with real numbers from the database -->
+<div class="grid">
+  <div class="card stat-card"><div class="stat-icon">🔁</div><div><div class="muted">Monthly recurring revenue</div><div class="stat">₹0</div></div></div>
+  <div class="card stat-card"><div class="stat-icon green">✅</div><div><div class="muted">Active subscriptions</div><div class="stat">0</div></div></div>
+  <div class="card stat-card"><div class="stat-icon amber">⏳</div><div><div class="muted">Outstanding</div><div class="stat">₹0</div></div></div>
+  <div class="card stat-card"><div class="stat-icon red">⚠️</div><div><div class="muted">Overdue invoices</div><div class="stat">0</div></div></div>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <h3>Revenue by month</h3>
+    <div class="empty"><span class="big">📈</span>The revenue chart will appear here once invoices are paid.</div>
+  </div>
+  <div class="card">
+    <h3>Needs attention</h3>
+    <div class="empty"><span class="big">🎉</span>No overdue invoices.</div>
+  </div>
+</div>
+{% endblock %}

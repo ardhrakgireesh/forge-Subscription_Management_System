@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Forgot password{% endblock %}
+{% block auth %}
+<div class="card">
+  <h2>Reset your password</h2>
+  <p class="muted">We will send a reset link to your registered email.</p>
+  <form method="post">
+    <label>Registered email</label><input type="email" name="email" required>
+    <button type="submit">Send reset link</button>
+  </form>
+  <p class="muted" style="margin-top:16px"><a href="{{ url_for('login') }}">Back to login</a></p>
+</div>
+{% endblock %}
