@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit discount' if discount else 'Add discount' }}{% endblock %}
+{% block heading %}{{ 'Edit discount' if discount else 'Add discount' }}{% endblock %}
+{% block content %}
+<div class="card narrow">
+  <form method="post">
+    <label>Name</label>
+    <input name="name" value="{{ f.get('name', '') }}" maxlength="100" placeholder="e.g. Volume discount" required>
+    <label>Kind</label>
+    <select name="kind" required>
+      {% for k in kinds %}<option value="{{ k }}" {% if f.get('kind') == k %}selected{% endif %}>{{ 'Percent (%)' if k == 'percent' else 'Fixed amount (₹)' }}</option>{% endfor %}
+    </select>
+    <label>Value (above 0; percent cannot be over 100)</label>
+    <input name="value" value="{{ f.get('value', '') }}" type="number" step="0.01" min="0.01" placeholder="e.g. 10" required>
+    <label>Minimum purchase (₹, optional)</label>
+    <input name="min_purchase" value="{{ f.get('min_purchase', '') }}" type="number" step="0.01" min="0">
+    <label>Minimum quantity (optional)</label>
+    <input name="min_quantity" value="{{ f.get('min_quantity', '') }}" type="number" step="1" min="0">
+    <label>Start date (optional)</label>
+    <input name="start_date" value="{{ f.get('start_date', '') }}" type="date">
+    <label>End date (optional)</label>
+    <input name="end_date" value="{{ f.get('end_date', '') }}" type="date">
+    <label>Usage limit (optional, empty = unlimited)</label>
+    <input name="usage_limit" value="{{ f.get('usage_limit', '') }}" type="number" step="1" min="1">
+    <label>Applies to</label>
+    <select name="product_id">
+      <option value="">Whole subscription</option>
+      {% for p in products %}<option value="{{ p.id }}" {% if f.get('product_id')|string == p.id|string %}selected{% endif %}>{{ p.name }}</option>{% endfor %}
+    </select>
+    <button type="submit">{{ 'Save changes' if discount else 'Add discount' }}</button>
+    <a class="btn secondary" href="{{ url_for('catalog.discounts') }}">Cancel</a>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Discounts{% endblock %}
+{% block heading %}Discounts{% endblock %}
+{% block content %}
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+    <div>
+      <h3 style="margin:0">Discount rules</h3>
+      <p class="muted" style="margin:4px 0 0">A valid discount is added to the next invoice automatically.</p>
+    </div>
+    <a class="btn" style="margin:0" href="{{ url_for('catalog.discount_new') }}">+ Add discount</a>
+  </div>
+
+  {% if rows %}
+  <div style="overflow-x:auto;margin-top:16px">
+  <table>
+    <thead><tr><th>Name</th><th>Discount</th><th>Applies to</th><th>Minimum</th><th>Dates</th><th>Used</th><th>Status</th><th style="width:150px">Actions</th></tr></thead>
+    <tbody>
+    {% for d in rows %}
+      {% set st = status_of(d) %}
+      <tr>
+        <td><b>{{ d.name }}</b></td>
+        <td>{% if d.kind == 'percent' %}{{ '%g' % d.value }}%{% else %}₹{{ '%.2f'|format(d.value) }}{% endif %}</td>
+        <td>{{ names.get(d.product_id, 'Whole subscription') if d.product_id else 'Whole subscription' }}</td>
+        <td>{% if d.min_purchase %}₹{{ '%g' % d.min_purchase }}{% endif %}{% if d.min_purchase and d.min_quantity %} · {% endif %}{% if d.min_quantity %}{{ d.min_quantity }} qty{% endif %}{% if not d.min_purchase and not d.min_quantity %}—{% endif %}</td>
+        <td>{{ d.start_date.strftime('%d %b %Y') if d.start_date else '—' }} → {{ d.end_date.strftime('%d %b %Y') if d.end_date else '—' }}</td>
+        <td>{{ d.times_used or 0 }}{% if d.usage_limit is not none %} / {{ d.usage_limit }}{% else %} / ∞{% endif %}</td>
+        <td><span class="pill {{ 'active' if st == 'Active' else ('overdue' if st == 'Expired' else 'cancelled') }}">{{ st }}</span></td>
+        <td>
+          <a href="{{ url_for('catalog.discount_edit', discount_id=d.id) }}">Edit</a>
+          <form method="post" action="{{ url_for('catalog.discount_delete', discount_id=d.id) }}" style="display:inline"
+                onsubmit="return confirm('Delete this discount?')">
+            <button type="submit" style="margin:0 0 0 12px;padding:0;background:none;color:var(--err);font-weight:600">Delete</button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <div class="empty"><span class="big">🏷️</span>No discounts yet. Click "Add discount" to create one.</div>
+  {% endif %}
+</div>
+{% endblock %}
