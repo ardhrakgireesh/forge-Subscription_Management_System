@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Record payment{% endblock %}
+{% block heading %}Record payment{% endblock %}
+{% block content %}
+<div class="card narrow">
+  <h3>Record a payment</h3>
+  <p class="muted">Money received against a confirmed invoice. When payments add up to the invoice total, it becomes Paid.</p>
+
+  {% if open_rows %}
+  <form method="post">
+    <label>Invoice</label>
+    <select name="invoice_id" required>
+      <option value="">Choose an invoice...</option>
+      {% for inv, paid, balance in open_rows %}
+        <option value="{{ inv.id }}" {% if f.get('invoice_id')|string == inv.id|string %}selected{% endif %}>
+          {{ inv.number }} · {{ inv.customer.name }} · owes ₹{{ '{:,.2f}'.format(balance) }}
+        </option>
+      {% endfor %}
+    </select>
+
+    <label>Payment method</label>
+    <select name="method" required>
+      <option value="">Choose...</option>
+      {% for m in methods %}
+        <option value="{{ m }}" {% if f.get('method') == m %}selected{% endif %}>{{ m }}</option>
+      {% endfor %}
+    </select>
+
+    <label>Amount (₹)</label>
+    <input name="amount" type="number" step="0.01" min="0.01" value="{{ f.get('amount', '') }}" placeholder="e.g. 1500" required>
+
+    <label>Payment date</label>
+    <input name="paid_on" type="date" max="{{ today }}" value="{{ f.get('paid_on', today) }}" required>
+
+    <label>Note <span class="muted">(optional)</span></label>
+    <input name="note" maxlength="200" value="{{ f.get('note', '') }}" placeholder="e.g. UPI ref 4821, paid by Ravi">
+
+    <button type="submit">Save payment</button>
+    <a class="btn secondary" href="{{ url_for('payments.payments') }}">Cancel</a>
+  </form>
+  {% else %}
+  <div class="empty"><span class="big">🎉</span>No invoices are waiting for payment.</div>
+  <a class="btn secondary" href="{{ url_for('payments.payments') }}">Back to payments</a>
+  {% endif %}
+</div>
+{% endblock %}

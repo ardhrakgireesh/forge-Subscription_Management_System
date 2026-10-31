@@ -1,39 +1,35 @@
 # Brightloop Subscription Management System
 
-Hackathon project: products, plans, subscriptions, invoices, payments and a finance dashboard.
-Stack: Python, Flask, SQLite (local, works offline), plain HTML/CSS.
+One system to run products, plans, subscriptions, invoices, payments and revenue reports for a subscription business.
+Stack: Python, Flask, SQLite (local database, works fully offline), plain HTML and CSS.
 
-## Run it
+## Run it (Windows)
 ```
-python -m venv venv
-venv\Scripts\activate          # Windows   (Mac/Linux: source venv/bin/activate)
-pip install -r requirements.txt
-python app.py
+py -m pip install -r requirements.txt
+py seed.py        # optional: fills realistic demo data (customers, products, plans, subscriptions, invoices, payments)
+py app.py
 ```
 Open http://127.0.0.1:5000
-Admin login: admin@brightloop.com / Admin@12345!
 
-## Git rules for the team
-- Both of us commit our OWN work, with clear messages ("added tax list page").
-- `git pull` before starting and before pushing. Push at least every hour.
-- Do not edit the same file at the same time (see split below).
+| Role | Login |
+|---|---|
+| Admin | admin@brightloop.com / Admin@12345! |
+| Customer | sign up on the Sign up page (or use a seeded customer after resetting their password) |
 
-## Who builds what
-| Area | Owner | Files |
-|---|---|---|
-| Auth, roles, DB models, subscription flow, invoice generation, discounts, dashboard | Ardhra | app.py, models.py, templates/subscriptions*, invoices*, dashboard.html |
-| Taxes, Products + variants, Plans, Discount forms, styling, seed data, demo script | Teammate | routes_catalog.py, templates/products*, plans*, taxes*, static/style.css, seed.py |
+## What it does
+- **Accounts:** sign up with one account per email and a strong password (more than 8 characters, upper, lower, special). Password reset link (printed in the console for the demo).
+- **Roles:** admin (everything, adds staff), staff (day-to-day, limited), customer (portal: only their own subscriptions and invoices).
+- **Catalog (admin):** taxes, products with variants (for example Brand: Odoo adds 560), plans (daily, weekly, monthly, yearly, minimum quantity, dates, auto-close and closable rules), discounts (fixed or percent, minimum purchase or quantity, dates, usage limit, per product or whole subscription).
+- **Subscriptions:** numbered, with lines, taxes and totals. Status flow: Draft, Quotation, Confirmed, Active, Closed. Quotation templates with a validity period.
+- **Billing day:** one "Run Billing" button creates invoices from active subscriptions with taxes and discounts applied. Nothing is billed twice: checked in code and enforced by a database unique constraint.
+- **Invoices:** Draft, Confirmed, Paid. Confirm, cancel, send and print.
+- **Payments:** recorded by method, amount, date and note against an invoice. The invoice becomes Paid when payments cover the total. Overdue invoices are listed to chase.
+- **Finance dashboard:** monthly recurring revenue, active subscriptions, revenue collected, outstanding, overdue invoices, revenue chart and revenue at risk (overdue plus subscriptions expiring within 7 days). Tested with 3,000 subscriptions and 9,000 invoices: every page loads in under 2 seconds.
 
-## Progress checklist
-- [x] Signup / login / reset / roles / add staff
-- [ ] Taxes CRUD
-- [ ] Products + variants CRUD
-- [ ] Plans CRUD
-- [ ] Discounts CRUD (admin only)
-- [ ] Quotation templates
-- [ ] Subscriptions + status flow
-- [ ] Invoice generation (no double billing)
-- [ ] Payments
-- [ ] Customer portal
-- [ ] Dashboard with real numbers
-- [ ] Seed data + demo
+## Known limitations (honest list)
+- Emails (password reset, invoice send) are printed in the console instead of sent through an email server.
+- The plan options "pausable" and "renewable" are stored but pause and renew actions are not built yet. Closing early and auto-close work.
+- Long lists are not paginated yet.
+
+## Team and Git
+Two members, both committing their own work to `main`. See the commit history for who built what.
