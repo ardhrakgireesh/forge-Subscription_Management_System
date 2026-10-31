@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Payments{% endblock %}
+{% block heading %}Payments{% endblock %}
+{% block content %}
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+    <h3 style="margin:0">Overdue invoices</h3>
+    <a class="btn" style="margin:0" href="{{ url_for('payments.payment_new') }}">+ Record payment</a>
+  </div>
+  {% if overdue %}
+  <div style="overflow-x:auto;margin-top:12px">
+  <table>
+    <thead><tr><th>Invoice</th><th>Customer</th><th>Due</th><th>Days late</th><th>Balance</th><th></th></tr></thead>
+    <tbody>
+    {% for r in overdue %}
+      <tr>
+        <td><a href="{{ url_for('invoices.invoice_view', inv_id=r.inv.id) }}"><b>{{ r.inv.number }}</b></a></td>
+        <td>{{ r.customer }}</td>
+        <td>{{ r.inv.due_date.strftime('%d %b %Y') }}</td>
+        <td><span class="pill overdue">{{ r.days_late }} day{{ '' if r.days_late == 1 else 's' }}</span></td>
+        <td>₹{{ '%.2f'|format(r.balance) }}</td>
+        <td><a href="{{ url_for('payments.payment_new', invoice=r.inv.id) }}">Record payment</a></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <div class="empty"><span class="big">🎉</span>No overdue invoices.</div>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h3>All payments</h3>
+  {% if rows %}
+  <div style="overflow-x:auto">
+  <table>
+    <thead><tr><th>Date</th><th>Invoice</th><th>Customer</th><th>Method</th><th>Amount</th><th>Note</th></tr></thead>
+    <tbody>
+    {% for p in rows %}
+      <tr>
+        <td>{{ p.paid_on.strftime('%d %b %Y') }}</td>
+        <td><a href="{{ url_for('invoices.invoice_view', inv_id=p.invoice_id) }}">{{ p.invoice.number }}</a></td>
+        <td>{{ p.invoice.customer.name }}</td>
+        <td>{{ p.method }}</td>
+        <td>₹{{ '%.2f'|format(p.amount) }}</td>
+        <td>{{ p.note or '' }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <div class="empty"><span class="big">💳</span>No payments recorded yet.</div>
+  {% endif %}
+</div>
+{% endblock %}
