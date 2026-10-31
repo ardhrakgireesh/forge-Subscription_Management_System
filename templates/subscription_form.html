@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}New subscription{% endblock %}
+{% block heading %}New subscription{% endblock %}
+{% block content %}
+<div class="card narrow">
+  <h3>Subscription details</h3>
+  <p class="muted">The number (SUB0001, SUB0002…) is given automatically. Order lines are added on the next screen.</p>
+  {% if not customers %}
+    <div class="flash error">There are no customers yet. A customer must sign up first.</div>
+  {% endif %}
+  {% if not plans %}
+    <div class="flash error">There are no plans yet. <a href="/plans/new">Add a plan</a> first.</div>
+  {% endif %}
+  <form method="post">
+    <label>Customer</label>
+    <select name="customer_id" required>
+      <option value="">Choose a customer…</option>
+      {% for c in customers %}<option value="{{ c.id }}" {% if f.customer_id|string == c.id|string %}selected{% endif %}>{{ c.name }} ({{ c.email }})</option>{% endfor %}
+    </select>
+
+    <label>Plan</label>
+    <select name="plan_id" required>
+      <option value="">Choose a plan…</option>
+      {% for p in plans %}<option value="{{ p.id }}" {% if f.plan_id|string == p.id|string %}selected{% endif %}>{{ p.name }} · ₹{{ '%.2f'|format(p.price) }} / {{ p.billing_period }}</option>{% endfor %}
+    </select>
+
+    <label>Start date</label>
+    <input type="date" name="start_date" value="{{ f.start_date or '' }}" required>
+
+    <label>Expiry date</label>
+    <input type="date" name="expiry_date" value="{{ f.expiry_date or '' }}" required>
+
+    <label>Payment terms</label>
+    <select name="payment_terms">
+      {% for t in terms %}<option value="{{ t }}" {% if f.payment_terms == t %}selected{% endif %}>{{ t }}</option>{% endfor %}
+    </select>
+
+    <button type="submit">Create subscription</button>
+    <a class="btn secondary" href="{{ url_for('subs.subscriptions') }}">Cancel</a>
+  </form>
+</div>
+{% endblock %}

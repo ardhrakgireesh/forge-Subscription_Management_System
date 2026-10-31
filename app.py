@@ -50,6 +50,9 @@ app.register_blueprint(catalog_bp)
 from routes_plans import plans_bp       # Plans
 app.register_blueprint(plans_bp)
 
+from routes_subscriptions import subs_bp
+app.register_blueprint(subs_bp)
+
 
 # ---------- auth routes ----------
 @app.route("/")

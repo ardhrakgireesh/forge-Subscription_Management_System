@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Subscriptions{% endblock %}
+{% block heading %}Subscriptions{% endblock %}
+{% block content %}
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+    <form method="get" style="display:flex;gap:8px;align-items:center">
+      <select name="status" onchange="this.form.submit()" style="width:auto">
+        <option value="">All statuses</option>
+        {% for s in statuses %}<option value="{{ s }}" {% if s == status %}selected{% endif %}>{{ s }}</option>{% endfor %}
+      </select>
+    </form>
+    <a class="btn" style="margin-top:0" href="{{ url_for('subs.subscription_new') }}">+ New subscription</a>
+  </div>
+
+  {% if rows %}
+  <div style="overflow-x:auto;margin-top:12px">
+    <table>
+      <tr><th>Number</th><th>Customer</th><th>Plan</th><th>Start</th><th>Expiry</th><th>Status</th></tr>
+      {% for s in rows %}
+      <tr>
+        <td><a href="{{ url_for('subs.subscription_view', sub_id=s.id) }}"><b>{{ s.number }}</b></a></td>
+        <td>{{ s.customer.name }}</td>
+        <td>{{ s.plan.name }}</td>
+        <td>{{ s.start_date.strftime('%d %b %Y') if s.start_date else '—' }}</td>
+        <td>{{ s.expiry_date.strftime('%d %b %Y') if s.expiry_date else '—' }}</td>
+        <td><span class="pill {{ s.status|lower }}">{{ s.status }}</span></td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+  {% else %}
+  <div class="empty"><span class="big">📝</span>No subscriptions{% if status %} with status {{ status }}{% endif %} yet.</div>
+  {% endif %}
+</div>
+{% endblock %}

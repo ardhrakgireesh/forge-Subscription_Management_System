@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}{{ s.number }}{% endblock %}
+{% block heading %}{{ s.number }}{% endblock %}
+{% block content %}
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+    <h3 style="margin:0">{{ s.number }} <span class="pill {{ s.status|lower }}">{{ s.status }}</span></h3>
+    <a class="btn secondary" style="margin-top:0" href="{{ url_for('subs.subscriptions') }}">← All subscriptions</a>
+  </div>
+  <div class="grid" style="margin-top:16px;margin-bottom:0">
+    <div><div class="muted">Customer</div><b>{{ s.customer.name }}</b><div class="muted">{{ s.customer.email }}</div></div>
+    <div><div class="muted">Plan</div><b>{{ s.plan.name }}</b><div class="muted">₹{{ '%.2f'|format(s.plan.price) }} / {{ s.plan.billing_period }}</div></div>
+    <div><div class="muted">Start date</div><b>{{ s.start_date.strftime('%d %b %Y') if s.start_date else '—' }}</b></div>
+    <div><div class="muted">Expiry date</div><b>{{ s.expiry_date.strftime('%d %b %Y') if s.expiry_date else '—' }}</b></div>
+    <div><div class="muted">Payment terms</div><b>{{ s.payment_terms }}</b></div>
+  </div>
+</div>
+
+<div class="card">
+  <h3>Order lines</h3>
+  {% if s.lines %}
+  <div style="overflow-x:auto">
+    <table>
+      <tr><th>Product</th><th>Qty</th><th>Unit price</th><th>Tax</th><th>Amount</th>{% if editable %}<th></th>{% endif %}</tr>
+      {% for l in s.lines %}
+      {% set net, tax = line_totals(l) %}
+      <tr>
+        <td><b>{{ l.product.name }}</b>{% if l.variant_id and variants.get(l.variant_id) %}<div class="muted">{{ variants[l.variant_id].attribute }}: {{ variants[l.variant_id].value }}</div>{% endif %}</td>
+        <td>{{ l.quantity }}</td>
+        <td>₹{{ '%.2f'|format(l.unit_price) }}</td>
+        <td>{% if l.tax %}{{ l.tax.name }}<div class="muted">₹{{ '%.2f'|format(tax) }}</div>{% else %}<span class="muted">No tax</span>{% endif %}</td>
+        <td>₹{{ '%.2f'|format(net) }}</td>
+        {% if editable %}
+        <td>
+          <form method="post" action="{{ url_for('subs.line_delete', sub_id=s.id, line_id=l.id) }}" onsubmit="return confirm('Remove this line?')">
+            <button class="btn secondary" style="margin:0;padding:4px 10px;font-size:13px">Remove</button>
+          </form>
+        </td>
+        {% endif %}
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+  <div style="display:flex;justify-content:flex-end;margin-top:14px">
+    <table style="width:auto;min-width:240px">
+      <tr><td class="muted">Subtotal</td><td style="text-align:right">₹{{ '%.2f'|format(totals.net) }}</td></tr>
+      <tr><td class="muted">Tax</td><td style="text-align:right">₹{{ '%.2f'|format(totals.tax) }}</td></tr>
+      <tr><td><b>Total</b></td><td style="text-align:right"><b>₹{{ '%.2f'|format(totals.total) }}</b></td></tr>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty"><span class="big">🧾</span>No lines yet.{% if editable %} Add the first product below.{% endif %}</div>
+  {% endif %}
+</div>
+
+{% if editable %}
+<div class="card">
+  <h3>Add a line</h3>
+  {% if not products %}
+    <div class="empty"><span class="big">📦</span>There are no products yet. <a href="/products">Add a product</a> first.</div>
+  {% else %}
+  <p class="muted">Minimum quantity for this plan: {{ s.plan.min_quantity or 1 }}. Leave the unit price empty to use the product price.</p>
+  <form method="post" action="{{ url_for('subs.line_add', sub_id=s.id) }}">
+    <div class="grid" style="margin-bottom:0">
+      <div>
+        <label>Product</label>
+        <select name="item" required>
+          <option value="">Choose a product…</option>
+          {% for p in products %}
+          <optgroup label="{{ p.name }}">
+            <option value="{{ p.id }}:0">{{ p.name }} · ₹{{ '%.2f'|format(p.sales_price) }}</option>
+            {% for v in p.variants %}
+            <option value="{{ p.id }}:{{ v.id }}">{{ p.name }} · {{ v.attribute }}: {{ v.value }} · ₹{{ '%.2f'|format(p.sales_price + (v.extra_price or 0)) }}</option>
+            {% endfor %}
+          </optgroup>
+          {% endfor %}
+        </select>
+      </div>
+      <div><label>Quantity</label><input type="number" name="quantity" min="1" value="{{ s.plan.min_quantity or 1 }}" required></div>
+      <div><label>Unit price (optional)</label><input type="number" name="unit_price" min="0" step="0.01" placeholder="Product price"></div>
+      <div>
+        <label>Tax</label>
+        <select name="tax_id">
+          <option value="">No tax</option>
+          {% for t in taxes %}<option value="{{ t.id }}">{{ t.name }}</option>{% endfor %}
+        </select>
+      </div>
+    </div>
+    <button type="submit">Add line</button>
+  </form>
+  {% endif %}
+</div>
+{% else %}
+<div class="card"><p class="muted" style="margin:0">🔒 Lines are locked because this subscription is {{ s.status }}.</p></div>
+{% endif %}
+{% endblock %}
